@@ -1,0 +1,267 @@
+FBCL-Net: Feature-Based Contrastive Learning Network for EEG Music Classification
+Overview
+
+FBCL-Net (Feature-Based Contrastive Learning Network) is a deep learning framework developed for classifying music stimuli from EEG (Electroencephalography) signals. The model combines handcrafted EEG features, attention mechanisms, contrastive learning, CNN-LSTM architectures, and multi-branch feature encoders to improve classification performance.
+
+The system processes EEG recordings collected while subjects listen to different songs and predicts the corresponding song class based on extracted brain activity patterns.
+
+Features
+EEG preprocessing using MNE
+Automatic feature extraction from EEG epochs
+Multi-band frequency analysis
+Band Attention Module
+Multi-Branch Feature Encoders
+CNN-LSTM Temporal Encoder
+Supervised Contrastive Learning
+Class-balanced training
+Attention visualization
+t-SNE embedding visualization
+Performance comparison plots
+Dataset Structure
+
+The notebook expects EEG data organized as:
+
+dataset/
+│
+├── sub-01/
+│   ├── ses-01/
+│   │   └── eeg/
+│   │       └── *.set
+│   ├── ses-02/
+│   └── ...
+│
+├── sub-02/
+├── sub-03/
+└── ...
+
+Supported EEG file formats:
+
+.set
+.fif
+.edf
+.bdf
+EEG Preprocessing
+
+The preprocessing pipeline includes:
+
+Loading EEG files
+Selecting EEG channels
+Average referencing
+Band-pass filtering (1–50 Hz)
+Notch filtering at 50 Hz
+Epoch generation
+
+Configuration:
+
+EPOCH_SEC = 4.0
+OVERLAP_SEC = 2.0
+
+Each EEG recording is divided into overlapping epochs for training.
+
+Frequency Bands Used
+Band	Frequency Range
+Delta	1 – 4 Hz
+Theta	4 – 8 Hz
+Alpha	8 – 13 Hz
+Beta	13 – 30 Hz
+Gamma	30 – 50 Hz
+Feature Extraction
+
+For each EEG epoch, the following features are extracted.
+
+Frequency-Domain Features
+Delta Band Power
+Theta Band Power
+Alpha Band Power
+Beta Band Power
+Gamma Band Power
+Band Ratios
+Theta / Alpha
+Alpha / Beta
+Statistical Features
+Mean
+Standard Deviation
+Skewness
+Kurtosis
+Peak-to-Peak Amplitude
+Hjorth Parameters
+Activity
+Mobility
+Complexity
+Feature Groups
+
+The extracted features are divided into four semantic groups:
+
+Feature Group	Description
+Band Power	EEG frequency band powers
+Ratios	Theta/Alpha and Alpha/Beta ratios
+Time Statistics	Statistical characteristics
+Hjorth Parameters	Signal complexity measures
+FBCL-Net Architecture
+1. Band Attention Module
+
+The Band Attention Module learns which EEG frequency bands contribute most to classification.
+
+Input:
+
+(Batch Size, 5 Bands, Channels)
+
+Output:
+
+Weighted EEG representation
+
+Advantages:
+
+Learns important frequency bands automatically
+Improves interpretability
+Generates attention scores for visualization
+2. Multi-Branch Feature Encoders
+
+Each feature group is processed independently.
+
+Branches:
+
+Band Power Encoder
+Ratio Encoder
+Time Statistics Encoder
+Hjorth Encoder
+
+Each branch contains:
+
+Fully Connected Layers
+Layer Normalization
+GELU Activation
+Residual Connections
+Dropout
+
+Output:
+
+Fixed-length embeddings
+3. CNN-LSTM Temporal Encoder
+
+The temporal branch captures long-range EEG dependencies.
+
+Components:
+
+CNN Layers
+1D Convolutions
+Residual Blocks
+Batch Normalization
+GELU Activations
+LSTM Layers
+Bidirectional LSTM
+Two Layers
+Temporal Feature Learning
+
+Benefits:
+
+Captures local patterns using CNN
+Captures temporal dynamics using LSTM
+4. Feature Fusion
+
+Outputs from:
+
+Band Attention Module
+Feature Encoders
+CNN-LSTM Temporal Encoder
+
+are fused into a shared latent representation.
+
+5. Classification Head
+
+The fused representation is passed through fully connected layers to predict song classes.
+
+Output:
+
+12 Song Classes
+Supervised Contrastive Learning
+
+FBCL-Net incorporates Supervised Contrastive Loss to improve feature discrimination.
+
+Objectives:
+
+Pull same-class embeddings closer
+Push different-class embeddings apart
+Improve generalization
+
+Combined Loss:
+
+Total Loss =
+Cross Entropy Loss +
+λ × Contrastive Loss
+
+where:
+
+λ = 0.3
+Training Configuration
+Optimizer
+AdamW
+
+Learning Rate:
+
+3e-4
+
+Weight Decay:
+
+1e-4
+Scheduler
+
+Cosine Learning Rate Decay with Warmup
+
+Batch Sizes
+Train Batch Size = 128
+Validation Batch Size = 256
+Training Epochs
+120 Epochs
+Early Stopping
+
+Patience:
+
+20 Epochs
+Evaluation Metrics
+
+The model is evaluated using:
+
+Accuracy
+Precision
+Recall
+Macro F1 Score
+Confusion Matrix
+Classification Report
+Visualizations
+Band Attention Visualization
+
+Shows the importance of:
+
+Delta
+Theta
+Alpha
+Beta
+Gamma
+
+bands learned by the model.
+
+t-SNE Visualization
+
+Displays embeddings:
+
+Before Contrastive Learning
+After Contrastive Learning
+
+to demonstrate class separation improvements.
+
+Training Curves
+
+Plots:
+
+Training Loss
+Validation Loss
+Training Accuracy
+Validation Accuracy
+Contrastive Loss
+Required Libraries
+
+Install dependencies:
+
+pip install mne scikit-learn matplotlib seaborn scipy tqdm \
+imbalanced-learn librosa torchvision Pillow psutil
